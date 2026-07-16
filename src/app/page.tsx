@@ -35,9 +35,15 @@ export default function Home() {
   // Refs for scroll computation
   const storyRef = useRef<HTMLDivElement>(null);
 
-  // Live scroll progress of the storytelling section (0..1)
-  const [, setStoryProgress] = useState(0);
+  // rAF-throttle handle for the scroll listener. We do NOT store scroll progress
+  // in React state because it would force a full-page rerender on every frame.
+  // React state is only updated when the active chapter actually changes.
   const storyProgressRaf = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+
+  // Client-side mobile breakpoint. Defaults to false on SSR so the server-rendered
+  // markup matches the initial client render (no hydration mismatch). The effect
+  // below subscribes to matchMedia and updates after hydration.
+  const [isMobile, setIsMobile] = useState(false);
 
   // Detect prefers-reduced-motion
   useEffect(() => {
@@ -48,7 +54,23 @@ export default function Home() {
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  // Scroll listener — single rAF-throttled subscription
+  // Detect mobile breakpoint via matchMedia (NOT window.innerWidth during render).
+  // Listener is cleaned up on unmount. State is false during SSR and the first
+  // client render, then synchronised inside the effect — this guarantees no
+  // hydration mismatch.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // Scroll listener — single rAF-throttled subscription.
+  // No React state is written per frame. We only call setActiveChapter when the
+  // computed chapter actually changes, so React skips rerenders for unchanged
+  // values. The top progress bar is driven separately by Framer Motion's
+  // useScroll/useSpring below and never touches React state in this component.
   useEffect(() => {
     const onScroll = () => {
       if (storyProgressRaf.current) return;
@@ -59,7 +81,7 @@ export default function Home() {
         const rect = el.getBoundingClientRect();
         const total = el.offsetHeight - window.innerHeight;
         if (total <= 0) {
-          setStoryProgress(0);
+          setActiveChapter((prev) => (prev !== 0 ? 0 : prev));
           return;
         }
         // Progress = how far the section's top has scrolled past the viewport top
@@ -67,8 +89,10 @@ export default function Home() {
         // reaches viewport bottom (i.e. we've scrolled `total`), progress=1.
         const scrolled = Math.max(0, Math.min(total, -rect.top));
         const p = total > 0 ? scrolled / total : 0;
-        setStoryProgress(p);
         const ch = chapterFromProgress(p);
+        // Only rerender when the chapter actually changes — bailing out via the
+        // functional updater keeps React from scheduling a rerender when the
+        // value is identical.
         setActiveChapter((prev) => (prev !== ch ? ch : prev));
       });
     };
@@ -345,7 +369,8 @@ export default function Home() {
               selectedId={selectedId}
               onSelect={handleCanvasSelect}
               reducedMotion={reducedMotion}
-              compact={false}
+              compact={isMobile}
+              hideLabels={isMobile || profileMode}
             />
           </div>
 

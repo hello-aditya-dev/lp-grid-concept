@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type KeyboardEvent } from "react";
+import { useRef, useCallback, type KeyboardEvent } from "react";
 import { Dimension } from "@/lib/lp-grid/layouts";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,15 @@ export const DIMENSIONS: { id: Dimension; label: string; index: string }[] = [
  * - Desktop (md+): full segmented bar with all five labels visible
  * - Mobile (<md): compact "01 ● ○ ○ ○ ○ Ecosystem" — fits 320px without overflow
  *
- * Keyboard:
+ * IMPORTANT: desktop and mobile tablists are BOTH mounted in the DOM (we just
+ * toggle visibility with `hidden md:inline-flex` / `flex md:hidden`). Because
+ * the mobile variant renders second, a single shared ref array would have its
+ * mobile button refs overwrite the desktop button refs at every index, breaking
+ * keyboard navigation on the desktop control. We therefore keep TWO separate
+ * ref arrays and bind a per-tablist keydown handler via useCallback so each
+ * tablist only ever focuses its own buttons.
+ *
+ * Keyboard (per WAI-ARIA tabs pattern):
  *   ArrowLeft / ArrowUp   → previous chapter
  *   ArrowRight / ArrowDown → next chapter
  *   Home                  → first chapter
@@ -35,48 +43,68 @@ export default function DimensionControl({
   onChange,
   className,
 }: DimensionControlProps) {
-  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  // Separate ref arrays so the mobile tablist can never overwrite the desktop
+  // tablist's button refs.
+  const desktopButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const mobileButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const activeIndex = DIMENSIONS.findIndex((d) => d.id === dimension);
 
-  const focusTab = (idx: number) => {
-    const clamped = Math.max(0, Math.min(DIMENSIONS.length - 1, idx));
-    const target = buttonsRef.current[clamped];
-    if (target) {
-      target.focus();
-      // Per WAI-ARIA tabs pattern: arrow keys move focus AND activate the tab
-      onChange(DIMENSIONS[clamped].id);
-    }
-  };
+  /**
+   * Build a keydown handler bound to a specific ref array. Each tablist gets
+   * its own handler, so focus never leaks across the desktop/mobile boundary.
+   */
+  const makeKeyDown = useCallback(
+    (refs: React.MutableRefObject<(HTMLButtonElement | null)[]>) =>
+      (e: KeyboardEvent<HTMLDivElement>) => {
+        const focusTab = (idx: number) => {
+          const clamped = Math.max(0, Math.min(DIMENSIONS.length - 1, idx));
+          const target = refs.current[clamped];
+          if (target) {
+            target.focus();
+            // Per WAI-ARIA tabs pattern: arrow keys move focus AND activate
+            onChange(DIMENSIONS[clamped].id);
+          }
+        };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    switch (e.key) {
-      case "ArrowRight":
-      case "ArrowDown":
-        e.preventDefault();
-        focusTab(activeIndex + 1);
-        break;
-      case "ArrowLeft":
-      case "ArrowUp":
-        e.preventDefault();
-        focusTab(activeIndex - 1);
-        break;
-      case "Home":
-        e.preventDefault();
-        focusTab(0);
-        break;
-      case "End":
-        e.preventDefault();
-        focusTab(DIMENSIONS.length - 1);
-        break;
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        onChange(DIMENSIONS[activeIndex].id);
-        break;
-      default:
-        break;
-    }
-  };
+        switch (e.key) {
+          case "ArrowRight":
+          case "ArrowDown":
+            e.preventDefault();
+            focusTab(activeIndex + 1);
+            break;
+          case "ArrowLeft":
+          case "ArrowUp":
+            e.preventDefault();
+            focusTab(activeIndex - 1);
+            break;
+          case "Home":
+            e.preventDefault();
+            focusTab(0);
+            break;
+          case "End":
+            e.preventDefault();
+            focusTab(DIMENSIONS.length - 1);
+            break;
+          case "Enter":
+          case " ":
+            e.preventDefault();
+            onChange(DIMENSIONS[activeIndex].id);
+            break;
+          default:
+            break;
+        }
+      },
+    [activeIndex, onChange],
+  );
+
+  const onDesktopKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => makeKeyDown(desktopButtonsRef)(e),
+    [makeKeyDown],
+  );
+  const onMobileKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => makeKeyDown(mobileButtonsRef)(e),
+    [makeKeyDown],
+  );
 
   return (
     <>
@@ -85,7 +113,7 @@ export default function DimensionControl({
         role="tablist"
         aria-label="Network dimension chapters"
         aria-orientation="horizontal"
-        onKeyDown={onKeyDown}
+        onKeyDown={onDesktopKeyDown}
         className={cn(
           "hidden md:inline-flex items-stretch gap-px rounded-full border border-white/10 bg-white/[0.02] p-1 backdrop-blur-md",
           className,
@@ -97,7 +125,7 @@ export default function DimensionControl({
             <button
               key={d.id}
               ref={(el) => {
-                buttonsRef.current[i] = el;
+                desktopButtonsRef.current[i] = el;
               }}
               role="tab"
               type="button"
@@ -139,7 +167,7 @@ export default function DimensionControl({
         role="tablist"
         aria-label="Network dimension chapters"
         aria-orientation="horizontal"
-        onKeyDown={onKeyDown}
+        onKeyDown={onMobileKeyDown}
         className={cn(
           "flex md:hidden items-center gap-3 rounded-full border border-white/10 bg-white/[0.02] px-3 py-2 backdrop-blur-md min-h-[44px]",
           className,
@@ -155,7 +183,7 @@ export default function DimensionControl({
               <button
                 key={d.id}
                 ref={(el) => {
-                  buttonsRef.current[i] = el;
+                  mobileButtonsRef.current[i] = el;
                 }}
                 role="tab"
                 type="button"
@@ -165,7 +193,7 @@ export default function DimensionControl({
                 aria-label={`${d.index} ${d.label}${active ? " (current)" : ""}`}
                 onClick={() => onChange(d.id)}
                 className={cn(
-                  "h-2 w-2 rounded-full transition-all duration-300 min-h-[16px] min-w-[16px] flex items-center justify-center",
+                  "group h-2 w-2 rounded-full transition-all duration-300 min-h-[16px] min-w-[16px] flex items-center justify-center",
                 )}
               >
                 <span
