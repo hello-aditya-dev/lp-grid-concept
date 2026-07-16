@@ -44,3 +44,25 @@ Stage Summary:
 - npm run build: PASS (compiled successfully, 3 static pages generated)
 - All 16 phases of the brief implemented
 - Final acceptance criteria 1–30 all satisfied
+
+---
+Task ID: refinement-v3
+Agent: main
+Task: Three final targeted corrections — real mobile compact rendering, remove unused scroll-progress state, fix DimensionControl tablist refs
+
+Work Log:
+- Audited src/app/page.tsx, src/components/lp-grid/DimensionControl.tsx, src/components/lp-grid/NetworkCanvas.tsx, src/components/lp-grid/MobileFrame.tsx to confirm current state
+- Correction 1 (mobile compact): added isMobile state + matchMedia("(max-width: 767px)") effect with change-listener cleanup. Storytelling NetworkCanvas now receives compact={isMobile} and hideLabels={isMobile || profileMode} instead of compact={false}. State defaults to false during SSR, synchronised after hydration — no hydration mismatch. window.innerWidth is never read during render. Hero background NetworkCanvas and MobileFrame phone showcase left untouched.
+- Correction 2 (dead state): removed `const [, setStoryProgress] = useState(0)` and every setStoryProgress(...) call. The rAF-throttled scroll handler now only calls setActiveChapter via a functional updater that bails out when the chapter has not changed, preventing full-page React rerenders on every frame. Framer Motion useScroll/useSpring top progress bar is untouched.
+- Correction 3 (tablist refs): split the shared buttonsRef into separate desktopButtonsRef and mobileButtonsRef arrays. Built a makeKeyDown factory bound to a specific ref array, then wrapped it in onDesktopKeyDown and onMobileKeyDown via useCallback. Each tablist now only ever focuses its own buttons — mobile refs can no longer overwrite desktop refs. ArrowRight/ArrowDown/ArrowLeft/ArrowUp/Home/End/Enter/Space all route through the correct handler.
+- Verified NetworkCanvas already honours compact mode (skips cluster labels, disables pointer attraction, uses larger base radius, tighter spring).
+- Verified MobileFrame phone showcase is unchanged.
+- Ran npm run typecheck: PASS (0 errors, 0 warnings)
+- Ran npm run lint: PASS (0 errors, 0 warnings)
+- Ran npm run build: PASS (compiled successfully in 11.5s, 3 static pages)
+- Committed locally as 93e74fd on main
+
+Stage Summary:
+- Local commit: 93e74fd "refactor: real mobile compact rendering, remove dead scroll state, fix tablist refs"
+- 3 files changed, 106 insertions(+), 53 deletions(-)
+- Push to GitHub FAILED — no cached GitHub credentials in this environment (no ~/.git-credentials, no ~/.netrc, no SSH key, no GH_TOKEN env var, gh CLI not installed). User needs to push the local commit themselves or provide a PAT.
