@@ -16,15 +16,6 @@ function hash(s: string): number {
   return (h >>> 0) / 4294967295;
 }
 
-// Use a seedable RNG so initial positions are stable across reloads
-function seeded(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967295;
-  };
-}
-
 const GEOGRAPHY_CENTERS: Record<Geography, { x: number; y: number }> = {
   "North America": { x: 0.28, y: 0.32 },
   Europe: { x: 0.52, y: 0.3 },
@@ -47,8 +38,6 @@ export interface NodeTarget {
   // relative scale factor (1 = default)
   scale: number;
 }
-
-const rng = seeded(42);
 
 // Pre-compute stable ecosystem positions per investor (sunflower/phyllotaxis for order)
 const ECOSYSTEM_POS: Record<string, { x: number; y: number }> = (() => {

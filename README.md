@@ -1,167 +1,233 @@
-# LP Grid — Mapping the Relationships Behind Private Markets
+# LP Grid — Independent Private-Markets Intelligence Concept
 
-> A visual intelligence interface that helps private-market professionals move from a fragmented institutional ecosystem to the investors, strategies and relationships most relevant to them.
+> **Independent concept exploration based solely on a public opportunity brief.**
+> This work was not commissioned by LP Grid and is not presented as official LP Grid work.
 
-This repository contains a polished, focused **concept study** for **LP Grid** — not a production platform, not a homepage redesign, not a complete dashboard. The concept exists to communicate one strong product direction through a small set of high-quality deliverables.
+A focused, scroll-driven product concept showing how institutional-investor data could be transformed into a premium visual intelligence experience. The visitor scrolls through six narrative chapters — ecosystem, geography, strategy, allocation, relationships, and a focused investor profile — while a Canvas-rendered relationship network reorganises itself in real time.
 
 ---
 
-## Concept statement
+## Live demo
 
-A visual intelligence interface that helps private-market professionals move from a fragmented institutional ecosystem to the investors, strategies and relationships most relevant to them.
+**https://lp-grid-concept.vercel.app/**
 
-The experience begins with a field of fictional institutional investors represented as interconnected points within a living relationship network. As the visitor scrolls or interacts, the system reorganises the investors along different intelligence dimensions — **geography**, **strategy**, **allocation size**, and **relationship strength** — before focusing on one investor (Meridian Sovereign Fund) and transitioning into a focused intelligence profile.
+Best experienced on a desktop with a trackpad or mouse scroll. The concept also adapts to mobile (320px and up) and tablet.
+
+---
+
+## Concept objective
+
+Communicate one strong product direction: how LP Grid could help private-market professionals move from a fragmented institutional ecosystem to the investors, strategies and relationships most relevant to them.
+
+The experience begins with a field of fictional institutional investors represented as interconnected points. As the visitor scrolls, the system reorganises the same data along different intelligence dimensions — **geography**, **strategy**, **allocation size**, and **relationship strength** — before focusing on one investor (Meridian Sovereign Fund) and transitioning into a focused intelligence profile.
 
 > From the entire private-market ecosystem to the relationships that matter.
 
 ---
 
-## Deliverables
+## What the interaction demonstrates
 
-This concept produces exactly four deliverables:
-
-| # | Deliverable | Where |
+| # | Chapter | What the visitor sees |
 |---|---|---|
-| 1 | **Desktop hero frame** | Live at `/` — full-viewport canvas with headline, supporting copy, dimension control |
-| 2 | **Animated relationship-map interaction** | Live at `/` — five modes (Ecosystem → Geography → Strategy → Allocation → Relationships) with smooth spring interpolation, plus auto-transition into the focused profile |
-| 3 | **Silent concept video (10.5s)** | `download/lp-grid-concept.mp4` (1920×1080, H.264, 30fps, ~10MB) and `download/lp-grid-concept.webm` (compressed web-ready) |
-| 4 | **Mobile frame** | Live at `/` (scroll down past the desktop hero, or click "Mobile frame" in the top bar) — a polished phone mockup with profile-first composition and mini relationship map |
-
-Key stills from the video are also provided as standalone images:
-- `download/video-frame-0s.png` — opening ecosystem shot
-- `download/video-frame-2.5s.png` — geography clustering
-- `download/video-frame-5s.png` — strategy clustering
-- `download/video-frame-7.5s.png` — relationship strength + focal node
-- `download/video-frame-10.3s.png` — focused investor profile + closing line
-
-Interactive state screenshots are also in `download/`:
-- `screenshot-ecosystem.png`, `screenshot-geography.png`, `screenshot-strategy.png`, `screenshot-allocation.png`, `screenshot-relationships.png`, `screenshot-profile-open.png`, `screenshot-mobile.png`
+| 01 | The ecosystem | All 60 fictional investors in a stable sunflower layout, with ~600 relationship lines connecting them |
+| 02 | Geography | Nodes regroup into four clusters — North America, Europe, Middle East, Asia-Pacific — with cluster labels |
+| 03 | Strategy | Nodes regroup by preferred private-market strategy (PE, Private credit, Infrastructure, Real assets, VC, Secondaries) with per-strategy colour |
+| 04 | Allocation | Nodes scale by typical commitment size and arrange along a horizontal axis from under $25M to $500M+ |
+| 05 | Relationships | Meridian Sovereign Fund becomes the focal point; other investors radiate outward by inverse relationship strength |
+| 06 | Investor intelligence | The network collapses around Meridian; a focused intelligence profile slides in showing AUM, commitments, strategies, signals, related orgs, and a summary |
 
 ---
 
-## Tech stack
+## Deliverables currently available
 
-- **Next.js 16** with App Router
-- **TypeScript 5**
-- **Tailwind CSS 4**
-- **Canvas 2D** for the relationship network (60 nodes + ~600 relationships — no need for WebGL, keeps the bundle small and 60fps on modern laptops)
-- **Framer Motion** for UI panel transitions
-- **Pillow + ffmpeg** (Python) for offline video frame rendering
-
-> Note: WebGL was deliberately **not** used. 60 nodes with smooth spring interpolation is well within Canvas 2D's budget, and Canvas keeps the implementation simple, debuggable, and battery-friendly on mobile.
+1. **Live interactive concept** (desktop + mobile) at the URL above
+2. **Desktop hero frame** — full-viewport Canvas network with headline, supporting copy, primary CTA
+3. **Scroll-driven animated relationship map** — six chapters with smooth spring interpolation, pinned network, chapter copy on the left
+4. **Mobile frame** — phone mockup showing the focused investor profile with a mini relationship map, plus the live responsive page itself (not just the mockup)
 
 ---
 
-## Local development
+## Planned video asset
+
+An 8–12 second silent concept film will be added as the final presentation asset at `public/media/lp-grid-concept.mp4`. The codebase is already prepared: a `ConceptVideo` component probes for the file via a HEAD request and renders a "Watch concept film" affordance only when the file actually exists. Until then, no video link is shown anywhere — the deployment contains zero 404 video links.
+
+---
+
+## Interaction model
+
+### Primary: scroll-driven storytelling
+
+The main experience is a 500vh-tall storytelling section. The Canvas network is pinned (sticky) inside the viewport and reorganises as the visitor scrolls. Six chapters are mapped to scroll-progress thresholds:
+
+| Chapter | Scroll range |
+|---|---|
+| 01 Ecosystem | 0% – 18% |
+| 02 Geography | 18% – 36% |
+| 03 Strategy | 36% – 54% |
+| 04 Allocation | 54% – 72% |
+| 05 Relationships | 72% – 88% |
+| 06 Investor intelligence | 88% – 100% |
+
+Scrolling works in both directions — scrolling backward correctly restores earlier network states. The transitions use spring interpolation (k≈0.05, damping 0.82) for smooth, weighted motion. No chained `setTimeout` calls, no auto-advancing timers, no scroll hijacking.
+
+### Secondary: manual dimension control
+
+A segmented selector at the bottom-center of the viewport lets the visitor jump directly to any chapter. Clicking a tab smoothly scrolls to that chapter's mid-point. The control is keyboard-accessible:
+
+- `ArrowLeft` / `ArrowUp` — previous chapter
+- `ArrowRight` / `ArrowDown` — next chapter
+- `Home` / `End` — first / last chapter
+- `Enter` / `Space` — activate focused tab
+- `Esc` — exit the focused profile (scrolls back to the Relationships chapter)
+
+### Node interaction
+
+In the Relationships chapter, clicking any investor node updates the focused profile to that investor. The profile dynamically derives plausible strategy allocation, relationship signals, related organisations, and an intelligence summary from the investor's metadata.
+
+---
+
+## Responsive behaviour
+
+The page is tested at 320px, 360px, 375px, 390px, 430px, 768px, 1024px, 1280px, and 1440px widths with **zero horizontal overflow** at any size.
+
+- **Desktop (≥768px)**: full segmented dimension bar, all cluster labels visible, pointer hover reveals node names, mouse attraction subtly displaces nearby nodes
+- **Mobile (<768px)**: compact `01 ● ○ ○ ○ ○ Ecosystem` selector, no cluster labels (avoids clutter on small screens), pointer events instead of mouse-only, touch-friendly 44px targets, simplified transitions
+
+The real page works on mobile — not only the phone mockup. The mockup exists to showcase a profile-first mobile composition as a separate deliverable.
+
+---
+
+## Accessibility
+
+- **Semantic HTML**: `<header>`, `<main>`, `<section>`, `<h1>`–`<h2>` hierarchy, `<button>` for all interactive controls
+- **ARIA**: `role="tablist"` / `role="tab"` with `aria-selected`, `aria-controls`, `aria-label`; `role="region"` for the profile; `role="img"` + `aria-describedby` for the canvas; `aria-live="polite"` for chapter copy; `role="progressbar"` for the relationship-strength indicator
+- **Keyboard**: full tab navigation, arrow-key chapter switching, Home/End support, Esc to exit profile
+- **Focus-visible**: all interactive elements show a visible amber focus ring
+- **Reduced motion**: `prefers-reduced-motion` removes ambient drift, snaps transitions, and disables smooth scroll
+- **Screen-reader description**: a visually hidden paragraph describes the canvas as a fictional interactive concept
+- **Color**: relationship strength is communicated through both colour (amber for strong) and text labels ("Strong" / "Moderate") — never colour alone
+- **Contrast**: text meets WCAG AA against the midnight-navy background
+
+---
+
+## Technology choices
+
+| Concern | Choice | Why |
+|---|---|---|
+| Framework | Next.js 16 (App Router) | Required by deployment target |
+| Language | TypeScript 5 (strict) | Type safety |
+| Styling | Tailwind CSS 4 | Utility-first, no custom CSS framework |
+| Motion | Framer Motion | `useScroll` / `useSpring` for the scroll-progress bar; `motion.div` for panel transitions |
+| Network renderer | Canvas 2D | See below |
+| Fonts | Geist Sans + Geist Mono (via `next/font`) | Modern grotesk with strong numeric readability |
+| Package manager | npm | Standard, Vercel-compatible |
+
+### Why Canvas 2D (not WebGL / Three.js)
+
+The network has 60 nodes and ~600 relationship lines. Canvas 2D handles this at a stable 60fps on modern laptops with a fraction of the GPU cost of WebGL. It also:
+
+- Keeps the bundle small (no Three.js / R3F / PixiJS)
+- Makes debugging trivial (single 2D context)
+- Plays well with `prefers-reduced-motion`
+- Avoids shader compilation jank on lower-end mobile devices
+
+WebGL would only earn its place for thousands of nodes or for 3D camera work — neither applies here. The simplest rendering method that performs is the right choice.
+
+---
+
+## Fictional-data disclaimer
+
+**All investor data shown is fictional and illustrative.**
+
+The dataset contains 60 invented institutions (pension funds, sovereign wealth funds, endowments, foundations, insurance groups, family offices, fund-of-funds, asset managers, institutional consultants) with internally consistent metadata: institution name, type, HQ, primary geography, AUM (range $1.2B–$240B), typical commitment size, preferred private-market strategies, relationship score, and recent-activity indicator.
+
+Relationships are computed deterministically from geographic proximity + shared strategies + combined relationship score (capped at ~600 visible relationships). No real confidential investor information is used. Any resemblance to real organisations is coincidental.
+
+A subtle "Illustrative data · independent concept" disclaimer is visible during the story and in the mobile profile.
+
+---
+
+## Local setup
 
 ```bash
-bun install
-bun run dev      # starts on http://localhost:3000
-bun run lint     # ESLint
+git clone https://github.com/witejackel-eng/lp-grid-concept.git
+cd lp-grid-concept
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-To regenerate the silent concept video:
+Requires Node.js 18.18+ (or 20+).
+
+---
+
+## Build and validation commands
 
 ```bash
-python3 scripts/render_video.py     # renders ~315 PNG frames (slow, ~5 min)
-python3 scripts/encode_video.py     # encodes frames to MP4 + WebM
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint .
+npm run build       # next build
+npm run start       # next start (production server)
 ```
 
-The video script (`scripts/render_video.py`) is a self-contained Python file that mirrors the same data and layout logic as the live web app, so the video faithfully represents what a user would see in the browser.
-
----
-
-## Interaction logic
-
-The relationship map supports five dimensions, switchable via the segmented control at the bottom of the screen (or keyboard `1`–`5`):
-
-1. **Ecosystem (01)** — full institutional network in a stable sunflower (phyllotaxis) layout. Subtle ambient drift; feels alive but controlled.
-2. **Geography (02)** — nodes regroup into four clusters: North America, Europe, Middle East, Asia-Pacific. Cluster labels fade in.
-3. **Strategy (03)** — nodes regroup by preferred private-market strategy: PE, Private credit, Infrastructure, Real assets, VC, Secondaries. Nodes take on a per-strategy tint.
-4. **Allocation (04)** — nodes scale by typical commitment size and arrange along a horizontal axis from <$25M to $500M+.
-5. **Relationships (05)** — one investor (Meridian Sovereign Fund) becomes the focal point. Others radiate outward with distance inversely proportional to relationship strength. After ~2 seconds, the network collapses around Meridian and the focused intelligence profile slides in from the right.
-
-Other interactions:
-- **Hover** any node to see its name as a small tooltip
-- **Click** any node in Relationships mode to focus that investor instead
-- **Mouse** movement creates subtle local attraction toward nearby nodes (desktop only)
-- **ESC** closes the profile / returns to ecosystem
-- **Reduced motion** (`prefers-reduced-motion`) removes ambient drift and snaps layout transitions
-
----
-
-## Visual system
-
-| Token | Value | Purpose |
-|---|---|---|
-| Background | `#0A0E14` (midnight navy) | Calm, institutional canvas |
-| Foreground | `#E8E5DD`/slate-200 | Warm off-white text |
-| Muted | slate-400/500 | Interface labels, metadata |
-| Accent | `#E8B864` (soft amber) | Selected investor, high-strength signals, primary CTA |
-| Secondary accent | `#4DA3FF` (mineral blue) | Reserved (used sparingly for hover/secondary nodes) |
-| Typography | Geist Sans + Geist Mono | Modern grotesk with strong numeric readability |
-
-**Motion principles**: smooth, weighted, controlled. Spring interpolation (k≈0.05, damping 0.82) for node repositioning. No bouncing, no particle explosions, no parallax. Every animation exists to communicate a change in how the data is being organised.
-
----
-
-## Data & disclaimer
-
-All investor data is **fictional** and **illustrative**. The dataset contains 60 invented institutions (pension funds, sovereign wealth funds, endowments, foundations, insurance groups, family offices, fund-of-funds, asset managers, institutional consultants) with internally consistent metadata:
-
-- Institution name, type, HQ, primary geography
-- AUM (range: $1.2B–$240B)
-- Typical commitment size
-- Preferred private-market strategies
-- Relationship score (0–1)
-- Recent activity indicator (Increasing / Stable / Decreasing)
-
-Relationships are computed deterministically from geographic proximity + shared strategies + combined relationship score (capped at ~600 visible relationships). No real confidential investor information is used.
-
-A subtle "Illustrative data shown for concept purposes" disclaimer is visible on the desktop hero and in the mobile profile.
-
----
-
-## Scope boundaries
-
-This concept **intentionally** does not include:
-- A complete homepage or marketing site
-- User authentication, search, or backend database
-- Real investor records, data scraping, or live integrations
-- A functional CRM or detailed investor-profile subpages
-- Pricing, About, Blog pages or full navigation architecture
-
-Any wider product design, engineering, or website work should be treated as a separate paid phase.
+All three validation commands pass cleanly with zero errors and zero warnings.
 
 ---
 
 ## Project structure
 
 ```
+public/
+├── og-lp-grid-concept.png   # 1200×630 Open Graph image
+├── robots.txt
+└── media/
+    └── README.md            # placeholder for the future concept video
+
 src/
 ├── app/
-│   ├── layout.tsx           # Geist fonts + dark theme metadata
-│   └── page.tsx             # Main concept page (desktop hero + mobile section)
+│   ├── layout.tsx           # Geist fonts, metadata (Aditya Singh, OG, canonical, robots)
+│   ├── page.tsx             # Hero + scroll-driven story + mobile + closing
+│   └── globals.css          # Tailwind 4 + reduced-motion + focus-visible
 ├── components/
 │   └── lp-grid/
-│       ├── NetworkCanvas.tsx     # Canvas 2D network renderer + spring physics
-│       ├── DimensionControl.tsx  # Segmented selector for the 5 dimensions
-│       ├── InvestorProfile.tsx   # Focused intelligence profile panel
-│       └── MobileFrame.tsx       # Phone-shell mobile frame + mini map
+│       ├── NetworkCanvas.tsx     # Canvas 2D renderer, spring physics, pointer events
+│       ├── DimensionControl.tsx  # Accessible tablist (desktop bar + mobile dots)
+│       ├── ChapterCopy.tsx       # Left-side chapter copy with progress dots
+│       ├── InvestorProfile.tsx   # Focused intelligence panel (works for any investor)
+│       ├── MobileFrame.tsx       # Phone mockup + mini relationship map
+│       └── ConceptVideo.tsx      # Future video modal (renders nothing until MP4 exists)
 └── lib/
     └── lp-grid/
         ├── data.ts          # 60 fictional investors + relationships + Meridian profile
-        └── layouts.ts       # Layout engine: ecosystem / geography / strategy / allocation / relationships
+        └── layouts.ts       # 5-dimension layout engine (deterministic)
 
 scripts/
-├── render_video.py          # Pillow-based frame renderer (315 frames @ 30fps)
-└── encode_video.py          # ffmpeg encoder (MP4 + WebM)
-
-download/                    # Final deliverables (video, stills, screenshots)
+└── generate_og.py          # Pillow script that renders the OG image from the real layout
 ```
 
 ---
 
-## Concept credits
+## Scope boundaries
 
-LP Grid is a concept study. All institutions, AUM figures, allocation percentages, relationship scores and activity indicators are invented for the purposes of this concept. Any resemblance to real organisations is coincidental.
+This is an **independent concept exploration**, not a production platform. It does **not** include:
+
+- A complete homepage or marketing site
+- User authentication, search, or a backend database
+- Real investor records, data scraping, or live integrations
+- A functional CRM or detailed investor-profile subpages
+- Pricing, About, Blog pages, or full navigation architecture
+- Testimonials, FAQs, services, or a contact form
+
+Any wider product design, engineering, or website work should be treated as a separate paid phase.
+
+---
+
+## Author
+
+**Aditya Singh**
+
+- GitHub: [witejackel-eng](https://github.com/witejackel-eng)
+- Portfolio: [dev-aditya-com.vercel.app](https://dev-aditya-com.vercel.app/)
+
+---
+
+*This is an independent concept exploration based solely on a public opportunity brief. It was not commissioned by LP Grid and is not presented as official LP Grid work. All investor data shown is fictional and illustrative.*

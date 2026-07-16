@@ -1,78 +1,46 @@
 # LP Grid — Concept Build Worklog
 
 Project: LP Grid interactive private-market intelligence concept
-Target deliverables: desktop hero, animated relationship map, 10s silent video, mobile frame
-Stack: Next.js 16 + TypeScript + Tailwind 4 + Canvas 2D (network) + Pillow/ffmpeg (video)
+Live: https://lp-grid-concept.vercel.app/
+Repo: https://github.com/witejackel-eng/lp-grid-concept
 
 ---
-Task ID: 1
+Task ID: refinement-v2
 Agent: main
-Task: Initialize project + plan architecture
+Task: Production-quality refinement — scroll-driven storytelling, mobile, accessibility, cleanup, OG image, metadata
 
 Work Log:
-- Initialized fullstack env (Next.js 16 ready)
-- Confirmed ffmpeg 7.1, Python Pillow + numpy available
-- No node-canvas/puppeteer; will use Pillow for video frame rendering
-- Fonts: Geist (web), DejaVu/Nimbus (Pillow fallback for video)
+- Audited entire repo: found 60+ unused shadcn components, dead Prisma/auth/MDX/dnd/chart/form deps, dead `src/lib/db.ts`, dead API route, sandbox-only Caddyfile/examples/mini-services/skills, `ignoreBuildErrors: true`, `reactStrictMode: false`, 30+ disabled ESLint rules, fake nav links, fake CTAs, chained-setTimeout auto-sequence, mouse-only canvas events, no OG image, no canonical, no Aditya Singh authorship
+- Rewrote package.json: renamed to `lp-grid-private-markets-concept`, kept only 7 runtime deps (next, react, react-dom, framer-motion, clsx, tailwind-merge) + 7 dev deps, removed db: scripts, npm-compatible scripts (dev/build/start/lint/typecheck)
+- Rewrote next.config.ts: removed `output: standalone`, removed `ignoreBuildErrors`, enabled `reactStrictMode`
+- Rewrote eslint.config.mjs: removed all 30+ broad suppressions, kept only pragmatic unused-vars (_prefix) and any-as-warn rules
+- Rewrote tsconfig.json: ES2020 target, strict mode
+- Deleted: src/components/ui/* (60 files), src/hooks/*, src/lib/db.ts, src/app/api/route.ts, prisma/, examples/, mini-services/, skills/, Caddyfile, components.json, tailwind.config.ts, db/, download/, .env, bun.lock, dev.log, server.log
+- Rewrote globals.css: removed all unused shadcn theme variables, kept minimal institutional palette, added reduced-motion + focus-visible base styles
+- Generated OG image 1200×630 via Python+Pillow using the real layout engine (geography chapter + Meridian focal node + authorship block)
+- Rewrote layout.tsx: metadataBase, canonical, OG image, Twitter card, robots, Aditya Singh as author/creator/publisher, themeColor, viewport
+- Created public/media/README.md placeholder for future video
+- Created ConceptVideo component: HEAD-probes for MP4, renders nothing until file exists (zero 404 video links)
+- Rewrote NetworkCanvas: pointer events (not mouse-only), DPI cap at 2, RAF cleanup, visibilitychange pause, reduced-motion respected, canvas role=img + aria-label + aria-describedby, removed per-frame state updates
+- Created ChapterCopy component: 6 chapters with index/title/copy/progress-dots, AnimatePresence transitions
+- Rewrote DimensionControl: two presentation modes (desktop bar + mobile "01 ● ○ ○ ○ ○ Ecosystem"), WAI-ARIA tabs pattern with ArrowLeft/Right/Home/End/Enter/Space, aria-selected, aria-controls, focus-visible
+- Rewrote InvestorProfile: works for any selected investor (derives strategy allocation, signals, related orgs, summary from metadata), removed unused activityColor, max-height with scroll, accessible region role
+- Rewrote MobileFrame: removed non-null assertions, accessible role=img + aria-label, reduced-motion respected on mini-map canvas, throttled to 30fps
+- Rewrote page.tsx: scroll-driven 500vh storytelling section with pinned Canvas, 6 chapters at 18%/18%/18%/18%/16%/12% thresholds, scroll-progress bar, manual dimension control scrolls to chapter (Option A), ESC exits profile, removed all chained setTimeouts, removed auto-profile-opening timer, new header (LP Grid + Independent concept | View mobile + Created by Aditya Singh), new hero CTAs (Explore the intelligence story, View mobile concept), closing block with authorship
+- Added closing block section after mobile frame
+- Rewrote README as professional case study (17 sections per brief)
+- Verified all 9 viewport widths (320, 360, 375, 390, 430, 768, 1024, 1280, 1440) — zero horizontal overflow
+- Verified all 6 chapters map to correct dimension on both desktop and mobile
+- Verified backward scroll restores network state correctly
+- Verified ESC closes profile
+- Verified manual tab click scrolls to chapter
+- Verified keyboard arrow navigation on tablist
+- Verified profile panel opens at chapter 6 with Meridian Sovereign Fund
+- Verified no console errors, no hydration warnings, only expected 404 for /media/lp-grid-concept.mp4 (intentional)
 
 Stage Summary:
-- Architecture: single `/` route with canvas-based network, 5 layout modes, smooth spring interpolation
-- Video: Python+Pillow renders ~315 frames at 30fps, ffmpeg encodes MP4
-- Color palette: midnight navy bg, warm off-white text, mineral-blue accent, soft amber for high-strength signals
-
----
-Task ID: 2-7
-Agent: main
-Task: Build + verify interactive concept
-
-Work Log:
-- Wrote `src/lib/lp-grid/data.ts` — 60 fictional investors + procedurally built relationships
-- Wrote `src/lib/lp-grid/layouts.ts` — 5 layout modes (ecosystem/geography/strategy/allocation/relationships) with spring-interpolation targets
-- Wrote `src/components/lp-grid/NetworkCanvas.tsx` — Canvas 2D renderer with persistent node positions, spring physics, mouse attraction, hover tooltips, cluster labels, relationship lines (5 strength bands)
-- Wrote `src/components/lp-grid/DimensionControl.tsx` — segmented bottom-center selector
-- Wrote `src/components/lp-grid/InvestorProfile.tsx` — right-side focused intelligence panel with metrics grid, strategy allocation bars, signals, related orgs, intelligence summary
-- Wrote `src/components/lp-grid/MobileFrame.tsx` — phone shell + profile-first composition + animated mini relationship map
-- Wrote `src/app/page.tsx` — full-viewport desktop hero + mobile section, auto-advances relationships → profile
-- Wrote `src/app/layout.tsx` — Geist fonts, dark theme, LP Grid metadata
-- Fixed React ref-during-render lint errors by wrapping ref sync in useEffect
-- Agent Browser verified: all 5 dimensions render, profile auto-opens after relationships, mobile frame works at 390x844, zero console errors
-
-Stage Summary:
-- Live site renders cleanly on http://localhost:3000
-- Lint passes
-- All 5 dimensions verified via screenshots
-- Mobile frame verified via viewport emulation
-
----
-Task ID: 8
-Agent: main
-Task: Generate 10-second silent MP4 concept video
-
-Work Log:
-- Wrote `scripts/render_video.py` — self-contained Python script that mirrors the same data + layout logic as the web app
-- Sequence: 0-1.5s ecosystem, 1.5-3.5s geography, 3.5-5.5s strategy, 5.5-7s relationships, 7-9s camera pulls to Meridian, 9-10.5s focused profile panel + closing line
-- 315 frames at 1920x1080, 30fps
-- Wrote `scripts/encode_video.py` — ffmpeg encodes MP4 (H.264, CRF 18) + WebM (VP9, 1.5Mbps)
-- Extracted 5 keyframes (0s, 2.5s, 5s, 7.5s, 10.3s) as standalone stills
-
-Stage Summary:
-- `/home/z/my-project/download/lp-grid-concept.mp4` (10.5s, 1920x1080, H.264, ~10MB)
-- `/home/z/my-project/download/lp-grid-concept.webm` (~2.7MB compressed web-ready)
-- 5 keyframe stills: `video-frame-0s/2.5s/5s/7.5s/10.3s.png`
-
----
-Task ID: 9
-Agent: main
-Task: Create GitHub repo + push
-
-Work Log:
-- Updated `.gitignore` to exclude node_modules, .next, dev.log, .zscripts, db, upload, scripts/frames, skills/
-- Wrote comprehensive `README.md` covering concept, deliverables, tech stack, dev setup, interaction logic, visual system, data disclaimer, scope, structure
-- Created public repo `witejackel-eng/lp-grid-concept` via GitHub API
-- Staged 100 files, committed with descriptive message, pushed to main
-- Scrubbed credential from local git config after push
-
-Stage Summary:
-- Repo live at https://github.com/witejackel-eng/lp-grid-concept
-- Commit sha: be5d901
-- All deliverables (code + video + screenshots) included
+- npm run typecheck: PASS (0 errors, 0 warnings)
+- npm run lint: PASS (0 errors, 0 warnings)
+- npm run build: PASS (compiled successfully, 3 static pages generated)
+- All 16 phases of the brief implemented
+- Final acceptance criteria 1–30 all satisfied

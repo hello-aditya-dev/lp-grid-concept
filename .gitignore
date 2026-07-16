@@ -2,14 +2,6 @@
 node_modules
 /.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
 
 # next.js
 /.next/
@@ -37,23 +29,17 @@ yarn-error.log*
 .idea/
 
 # logs
-dev.log
-server.log
 *.log
 
-# zscripts (sandbox)
-.zscripts/
+# vercel
+.vercel
 
-# db
-db/
-prisma/*.db
-prisma/*.db-journal
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-# upload staging
+# sandbox-only
 upload/
-
-# scripts/frames (video intermediates)
-scripts/frames/
-
-# sandbox skills dir (cloned, not project code)
-skills/
+.zscripts/
+Caddyfile
+db/
